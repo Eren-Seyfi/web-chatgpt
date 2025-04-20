@@ -19,7 +19,7 @@ Puppeteer + Stealth ile ChatGPT web arayüzü üzerinde çalışan **tam otomati
 ## 📦 Kurulum
 
 ```bash
-git clone https://github.com/Eren-Seyfi/web-chatgpt.git
+git clone https://github.com/erenseyfi/web-chatgpt.git
 cd web-chatgpt
 npm install
 ```

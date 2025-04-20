@@ -1,7 +1,7 @@
 {
   "name": "web-chatgpt",
   "version": "1.0.0",
-  "description": "Puppeteer + Stealth ile ChatGPT web arayüzü üzerinden mesaj gönderimi, cevap alma ve görsel üretimi sağlayan modüler otomasyon sistemi.",
+ "description": "A modular automation system for sending messages, receiving responses, and generating images through the ChatGPT web interface using Puppeteer + Stealth.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

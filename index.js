@@ -1,70 +1,70 @@
-// Gerekli modüller içe aktarılıyor
-import Bot from "./lib/core/Bot.js"; // Puppeteer ile çalışan ana bot sınıfı
-import { generateImage } from "./lib/features/DalleImage.js"; // DALL·E ile görsel üretimi (dosya olarak)
-import { generateImageBase64 } from "./lib/features/DalleImageBase64.js"; // DALL·E ile görsel üretimi (Base64 olarak)
-import { queueImageWithRetry } from "./lib/core/GPTQueueHelper.js"; // Görsel üretimi için sıralı işlem ve retry mekanizması
-import { logError, logInfo } from "./lib/utils/logger.js"; // Loglama işlemleri
-import { delay } from "./lib/utils/delay.js"; // Gecikme fonksiyonu
+// Required modules
+import Bot from "./lib/core/Bot.js"; // Main Puppeteer-powered bot class
+import { generateImage } from "./lib/features/DalleImage.js"; // DALL·E image generation (file)
+import { generateImageBase64 } from "./lib/features/DalleImageBase64.js"; // DALL·E image generation (base64)
+import { queueImageWithRetry } from "./lib/core/GPTQueueHelper.js"; // Queue-based generation with retry/fallback
+import { logError, logInfo } from "./lib/utils/logger.js"; // Logging utilities
+import { delay } from "./lib/utils/delay.js"; // Delay function
 
-// createChatGPT: Bot örneği oluşturur ve Chat, Image, ImageBase64 gibi methodlar sağlar
+/**
+ * Initializes and returns an interface for interacting with ChatGPT.
+ * Provides methods for chat, image generation, and queued image processing.
+ *
+ * @param {object} config - Configuration for the bot
+ * @returns {Promise<object>} - Object containing chat, image, imageBase64, describe, queueImage, and close functions
+ */
 export async function createChatGPT(config = {}) {
-  // Bot sınıfı yapılandırılarak oluşturuluyor
+  // Create and configure the bot instance
   const bot = new Bot({
-    model: config.model || "gpt-4", // Kullanılacak model (varsayılan gpt-4)
-    stealth: config.stealth !== false, // Stealth mod açık mı
-    fingerprint: config.fingerprint !== false, // Parmak izi taklidi açık mı
-    headless: config.headless !== false, // Headless mod açık mı
-    language: config.language || "en-US", // Tarayıcı dili
-    proxy: config.proxy || { enabled: false, server: "" }, // Proxy ayarları
-    useSavedCookies: config.useSavedCookies !== false, // Oturum çerezi yüklenecek mi
-    cookiePath: config.cookiePath || "sessions/cookies.json", // Çerez dosyası yolu
+    model: config.model || "gpt-4",
+    stealth: config.stealth !== false,
+    fingerprint: config.fingerprint !== false,
+    headless: config.headless !== false,
+    language: config.language || "en-US",
+    proxy: config.proxy || { enabled: false, server: "" },
+    useSavedCookies: config.useSavedCookies !== false,
+    cookiePath: config.cookiePath || "sessions/cookies.json",
   });
 
-  // Bot başlatılıyor (tarayıcı açılıyor ve giriş yapılıyor)
+  // Initialize the bot (launch browser and attempt login)
   const isReady = await bot.init();
 
-  // Giriş başarısızsa kapat ve hata ver
   if (!isReady) {
     await bot.close();
-    logError("Giriş yapılamadı.");
-    throw new Error("Giriş yapılamadı.");
+    logError("Login failed.");
+    throw new Error("Login failed.");
   }
 
-  // Başarılıysa aşağıdaki fonksiyonları içeren bir nesne döndür
   return {
-    // Metin tabanlı sohbet
+    // Send messages and receive replies
     chat: async (messages) => await bot.chat(messages),
 
-    // Görsel oluşturma (dosya olarak kaydetme)
+    // Generate an image and save as a file
     image: async (prompt, outputPath = "output.png") => {
       const result = await generateImage(bot.page, prompt, outputPath);
       return result;
     },
 
-    // Görsel oluşturma (base64 string olarak döndürme)
+    // Generate an image and return as base64 string
     imageBase64: async (prompt) => {
       const base64 = await generateImageBase64(bot.page, prompt);
       return base64;
     },
 
-    // Prompt'a göre betimleyici açıklama üretme
+    // Request a textual description of a prompt instead of an image
     describe: async (prompt) => {
-      logInfo(`📝 Betimleyici açıklama isteniyor: ${prompt}`);
+      logInfo(`📝 Requesting descriptive explanation for: ${prompt}`);
 
-      // Chat alanını bul ve prompt'u yaz
       await bot.page.waitForSelector("textarea", { timeout: 30000 });
       await bot.page.type(
         "textarea",
-        `Lütfen şu sahnenin detaylı bir betimlemesini yaz: ${prompt}`
+        `Please write a detailed description of the following scene: ${prompt}`
       );
-
-      // Gönder butonunu bekle ve tıkla
       await bot.page.waitForSelector("#composer-submit-button:not([disabled])");
       await bot.page.click("#composer-submit-button");
 
-      logInfo("💬 Açıklama bekleniyor...");
+      logInfo("💬 Waiting for description...");
 
-      // Mesaj tamamlanana kadar bekle
       await bot.page.waitForFunction(
         () => {
           const stop = document.querySelector(
@@ -73,42 +73,38 @@ export async function createChatGPT(config = {}) {
           const speech = document.querySelector(
             '[data-testid="composer-speech-button"]'
           );
-          return !stop && !!speech; // Stop butonu kalktıysa ve sesli mesaj butonu varsa işlem bitmiş demektir
+          return !stop && !!speech;
         },
         { timeout: 60000 }
       );
 
-      // En son yanıtı al
       const response = await bot.page.evaluate(() => {
         const blocks = document.querySelectorAll(".markdown");
         const last = blocks[blocks.length - 1];
-        return last?.innerText || "Açıklama alınamadı.";
+        return last?.innerText || "No description was received.";
       });
 
-      logInfo("🧠 Açıklama:\n" + response);
+      logInfo("🧠 Description:\n" + response);
     },
 
-    // Prompt listesine göre sırayla açıklama alıp görsel üret
+    // Sequentially generate images from prompts with retry and fallback
     queueImage: async (items = []) => {
       await queueImageWithRetry(bot.page, items, async (prompt) => {
-        await bot.page.bringToFront(); // Sayfayı öne getir
-        await delay(1000); // Kısa bekleme
+        await bot.page.bringToFront();
+        await delay(1000);
 
-        // Önceki veri varsa temizle
         await bot.page.evaluate(() => {
           const textarea = document.querySelector("textarea");
           if (textarea) textarea.value = "";
         });
 
-        await delay(500); // Biraz daha bekleme
+        await delay(500);
 
-        // Prompt giriliyor
         await bot.page.type(
           "textarea",
-          `Lütfen şu sahnenin detaylı bir betimlemesini yaz: ${prompt}`
+          `Please write a detailed description of the following scene: ${prompt}`
         );
 
-        // Gönder ve tamamlanmasını bekle
         await bot.page.waitForSelector(
           "#composer-submit-button:not([disabled])"
         );
@@ -127,18 +123,17 @@ export async function createChatGPT(config = {}) {
           { timeout: 60000 }
         );
 
-        // Açıklama alınır
         const description = await bot.page.evaluate(() => {
           const blocks = document.querySelectorAll(".markdown");
           const last = blocks[blocks.length - 1];
-          return last?.innerText || "Açıklama alınamadı.";
+          return last?.innerText || "No description was received.";
         });
 
-        logInfo("🧠 Betimleme:\n" + description);
+        logInfo("🧠 Description:\n" + description);
       });
     },
 
-    // Botu kapatma fonksiyonu
+    // Gracefully close the browser
     close: async () => await bot.close(),
   };
 }

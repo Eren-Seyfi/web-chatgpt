@@ -1,68 +1,68 @@
 import { createChatGPT } from "./index.js";
 import { logInfo, logSuccess, logError } from "./lib/utils/logger.js";
 
-// Ana işlem fonksiyonu
+// Main execution function
 const run = async () => {
   try {
-    // 🔧 GPT sistemi başlatılıyor
+    // 🔧 Initialize ChatGPT automation system
     const gpt = await createChatGPT({
-      // 💡 Kullanılacak model (gpt-4, gpt-3.5 gibi)
+      // 💡 Model to use (e.g., gpt-4, gpt-3.5)
       model: "gpt-4",
 
-      // 🖥️ Headless false: Tarayıcı arayüzü açık (gözlemlenebilir)
+      // 🖥️ Headless: false → browser UI will be visible
       headless: false,
 
-      // 🌐 Tarayıcı dili Türkçe (ChatGPT Türkçe arayüz açar)
+      // 🌐 Browser language (ChatGPT interface will load in Turkish)
       language: "tr-TR",
 
-      // 🕵️‍♂️ Stealth modu aktif (bot tespitini engellemek için)
+      // 🕵️‍♂️ Enable stealth mode (to reduce bot detection)
       stealth: true,
 
-      // 🧬 Fake navigator.language, fingerprint taklidi yapılacak mı?
+      // 🧬 Enable fake navigator.language and fingerprint spoofing
       fingerprint: true,
 
-      // 🌍 Proxy yapılandırması
+      // 🌍 Proxy configuration
       proxy: {
-        enabled: false, // false: proxy kapalı
-        server: "", // proxy adresi (örnek: "http://127.0.0.1:8000")
+        enabled: false, // false: disable proxy
+        server: "", // e.g., "http://127.0.0.1:8000"
       },
 
-      // 📁 Oturum çerezi yolu (varsayılan: sessions/cookies.json)
+      // 📁 Cookie path (default: sessions/cookies.json)
       // cookiePath: "sessions/cookies.json"
     });
 
-    // 🎯 1. Chat özelliği
+    // 🎯 1. Chat feature (send messages and receive responses)
     const chatResponses = await gpt.chat([
-      "Merhaba! Nasılsın?",
-      "Bana komik bir fıkra anlatır mısın?",
+      "Hello! How are you?",
+      "Can you tell me a funny joke?",
     ]);
 
     chatResponses.forEach((res, i) => {
-      logInfo(`\n📨 Soru ${i + 1}: ${res.prompt}`);
-      logSuccess(`🧠 Cevap:\n${res.content}`);
+      logInfo(`\n📨 Prompt ${i + 1}: ${res.prompt}`);
+      logSuccess(`🧠 Response:\n${res.content}`);
     });
 
-    // 🎯 2. Tek görsel oluştur ve indir (image)
-    await gpt.image("ışıklı camdan yapılmış bir ayıcık", "bear.png");
+    // 🎯 2. Generate a single image and save it to disk
+    await gpt.image("a teddy bear made of glowing glass", "bear.png");
 
-    // 🎯 3. Görseli base64 olarak al
+    // 🎯 3. Generate image and return as base64 string
     const base64 = await gpt.imageBase64(
-      "mor sisli bir ormanda yüzen kristal kelebek"
+      "a crystal butterfly swimming in a purple foggy forest"
     );
-    console.log("📷 Base64 (ilk 100 karakter):", base64.slice(0, 100) + "...");
+    console.log("📷 Base64 (first 100 chars):", base64.slice(0, 100) + "...");
 
-    // 🎯 4. Sıralı görsel üretim (queueImage) + retry + backoff + fallback
+    // 🎯 4. Generate multiple images in sequence with retry + backoff + fallback
     await gpt.queueImage([
       {
-        prompt: "neon ayıcık",
+        prompt: "neon teddy bear",
         output: "neon-bear.png",
-        retry: 3, // Maksimum 3 deneme
-        retryDelay: 2000, // 2 saniye aralık
-        backoff: true, // Gecikme her başarısızlıkta katlanır
-        describeInstead: true, // Başarısız olursa açıklama alınır
+        retry: 3, // Maximum 3 attempts
+        retryDelay: 2000, // 2 seconds delay between attempts
+        backoff: true, // Delay will double after each failed attempt
+        describeInstead: true, // If all retries fail, get a text description instead
       },
       {
-        prompt: "uçan pizzacı robot",
+        prompt: "flying pizza delivery robot",
         output: "drone.png",
         retry: 2,
         retryDelay: 1000,
@@ -71,10 +71,10 @@ const run = async () => {
       },
     ]);
 
-    // Tarayıcı kapatılır
+    // Close the browser session
     await gpt.close();
   } catch (err) {
-    logError("🚨 Genel hata: " + err.message);
+    logError("🚨 General error: " + err.message);
   }
 };
 

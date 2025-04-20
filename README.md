@@ -122,46 +122,64 @@ await gpt.describe("neon teddy bear");
 
 ## ⚙️ Configuration Options
 
-| Option           | Description                          |
-|------------------|--------------------------------------|
-| `model`         | GPT model (`gpt-4`, `gpt-3.5`)       |
-| `language`      | Browser language (`en-US`, `tr-TR`)  |
-| `stealth`       | Enable/disable stealth plugin        |
-| `fingerprint`   | Fake navigator fingerprint           |
-| `headless`      | Run browser in headless mode         |
-| `proxy.enabled` | Whether to use proxy                 |
-| `proxy.server`  | Proxy server address                 |
-| `cookiePath`    | Where to store cookies               |
+These can be passed to `createChatGPT({...})`:
+
+| Option           | Type      | Description |
+|------------------|-----------|-------------|
+| `model`          | `string`  | GPT model to use (`gpt-4`, `gpt-3.5`) |
+| `headless`       | `boolean` | Whether to hide browser UI (`true` by default) |
+| `language`       | `string`  | Browser language (`en-US`, `tr-TR`, etc.) |
+| `stealth`        | `boolean` | Enables puppeteer-extra stealth plugin |
+| `fingerprint`    | `boolean` | Fakes `navigator.language`, `platform`, etc. |
+| `proxy.enabled`  | `boolean` | Use proxy server |
+| `proxy.server`   | `string`  | Proxy URL like `http://127.0.0.1:8080` |
+| `cookiePath`     | `string`  | File path to store session cookies (`sessions/cookies.json` by default) |
 
 ---
 
 ## 🔐 Login & Session Management
 
-The library automatically handles session logic:
+The library handles session cookies automatically.
 
-1. When `createChatGPT()` is called, it first checks for cookies.
-2. If valid, it skips login and proceeds.
-3. If not, the browser is opened for manual login.
-4. After successful login, cookies are saved to `sessions/cookies.json`.
+### 🔓 Without Login (No Cookies)
 
-> Login is only required once, future sessions use cookies.
+- If no cookie file exists or the session is invalid:
+  - The browser will open
+  - You must manually log in to ChatGPT
+  - After login, cookies will be saved to disk
+  - On next run, login will be skipped
 
-### Custom Cookie Path
+### 🔐 With Login (Existing Cookies)
 
-```js
-await createChatGPT({
-  cookiePath: "my-data/login.json"
-});
-```
+- If valid cookies exist:
+  - Login screen is skipped
+  - You are automatically signed in
+  - This makes repeated automation faster and seamless
+
+> ✅ Tip: run `npm run login` manually once to save a working session before automation.
 
 ---
 
 ## 🧪 Full Integration Example
 
 ```js
-const gpt = await createChatGPT({ model: "gpt-4", headless: false });
+import { createChatGPT } from "./index.js";
+
+const gpt = await createChatGPT({
+  model: "gpt-4",            // GPT model to use
+  headless: false,           // Show browser window
+  language: "tr-TR",         // Set browser language to Turkish
+  stealth: true,             // Enable stealth plugin to avoid bot detection
+  fingerprint: true,         // Fake navigator fingerprint
+  proxy: {
+    enabled: false,          // Disable proxy
+    server: ""               // Proxy address if needed
+  },
+  cookiePath: "sessions/cookies.json" // Path to session cookie file
+});
 
 await gpt.chat(["Hello!", "How are you today?"]);
+
 await gpt.image("an owl reading a book under lamp light", "owl.png");
 
 const base64 = await gpt.imageBase64("an ancient city in smoke");

@@ -1,25 +1,27 @@
-# 🧠 web-chatgpt — Gelişmiş Otomasyon Sistemi
+# 🇹🇷 web-chatgpt — Gelişmiş Otomasyon Sistemi
 
-Puppeteer + Stealth ile ChatGPT web arayüzü üzerinde çalışan **tam otomatik bir sohbet ve görsel üretim kütüphanesi**. Bu sistem, hem CLI hem de modül olarak kullanılabilir.
+> 📘 Bu dökümantasyonun İngilizce versiyonu için [tıklayın →](./web-chatgpt-README-MERGED.md)
+
+Tam otomatik **ChatGPT konuşma ve görsel üretim kütüphanesi**. Puppeteer + Stealth kullanır. CLI aracı olarak veya modül şeklinde kullanılabilir.
 
 ---
 
 ## 🚀 Özellikler
 
 - 💬 ChatGPT’ye otomatik mesaj gönderme ve sıralı cevap alma
-- 🎨 DALL·E destekli görsel oluşturma (.png veya base64)
+- 🎨 DALL·E kullanarak görsel oluşturma (.png veya base64)
 - 🔁 Yeniden deneme destekli görsel üretimi (`queueImage`)
-- 🧠 Başarısızlık durumunda betimleme (`describeInstead`)
-- ☁️ Cloudflare korumasına karşı Stealth desteği
-- 🍪 Oturum (çerez) yönetimi: 1 kez giriş yeterli!
-- ⚙️ Proxy, dil, headless, fingerprint gibi ileri düzey yapılandırmalar
+- 🧠 Başarısız görsel üretimlerinde açıklama alınması (`describeInstead`)
+- ☁️ Cloudflare ve bot korumasına karşı Stealth desteği
+- 🍪 Oturum (çerez) yönetimi: bir kez giriş, tekrar kullanım
+- ⚙️ Gelişmiş yapılandırmalar: proxy, dil, headless, fingerprint vs.
 
 ---
 
 ## 📦 Kurulum
 
 ```bash
-git clone https://github.com/erenseyfi/web-chatgpt.git
+git clone https://github.com/Eren-Seyfi/web-chatgpt.git
 cd web-chatgpt
 npm install
 ```
@@ -30,41 +32,41 @@ npm install
 
 ```
 web-chatgpt/
-├── index.js                → Ana uygulama girişi
-├── login.js                → Oturum çerezi oluşturucu
-├── test.js                 → Örnek işlemler
-├── sessions/cookies.json   → Otomatik kaydedilen oturum çerezi
+├── index.js                → Ana giriş noktası
+├── login.js                → Giriş çerezi kaydetme aracı
+├── test.js                 → Test komutları
+├── sessions/cookies.json   → Kaydedilmiş oturum çerezleri
 ├── lib/
-│   ├── core/               → Bot, queue, sayfa kontrol sınıfları
-│   ├── features/           → Görsel üretimi, chat özelliği
-│   └── utils/              → delay, logger, yardımcı araçlar
-└── package.json            → Proje yapılandırması
+│   ├── core/               → Bot, sıralama, sayfa kontrolü
+│   ├── features/           → Sohbet ve görsel üretim modülleri
+│   └── utils/              → delay, logger, yardımcılar
+└── package.json            → Proje yapılandırma dosyası
 ```
 
 ---
 
 ## 🧪 Komutlar
 
-| Komut             | Açıklama                                              |
-|-------------------|--------------------------------------------------------|
-| `npm run login`   | Giriş yapmanı bekler, çerezleri `sessions/` içine kaydeder |
-| `npm run test`    | `test.js` çalıştırılır, örnek işlemler yapılır        |
-| `npm start`       | `index.js` başlatılır                                 |
-| `npm run dev`     | `nodemon` ile canlı geliştirme başlatılır             |
+| Komut            | Açıklama                                                |
+|------------------|----------------------------------------------------------|
+| `npm run login`  | Giriş ekranını açar, giriş yapmanı bekler ve çerezi kaydeder |
+| `npm run test`   | `test.js` içindeki örnek işlemleri çalıştırır           |
+| `npm start`      | Ana uygulamayı başlatır (`index.js`)                     |
+| `npm run dev`    | `nodemon` ile geliştirme modunu başlatır                 |
 
 ---
 
 ## 💬 `chat(messages: string[])`
 
 ```js
-const res = await gpt.chat(["Merhaba!", "Komik bir fıkra anlat."]);
+const res = await gpt.chat(["Merhaba!", "Komik bir fıkra anlatır mısın?"]);
 ```
 
-Gelen cevap:
+Yanıt:
 ```js
 [
-  { prompt: "Merhaba!", content: "Selam! 👋 Nasılsın?" },
-  { prompt: "Komik bir fıkra anlat.", content: "Temel ile Dursun..." }
+  { prompt: "Merhaba!", content: "Selam! 👋 Sana nasıl yardımcı olabilirim?" },
+  { prompt: "Komik bir fıkra anlatır mısın?", content: "Temel ile Dursun..." }
 ]
 ```
 
@@ -73,7 +75,7 @@ Gelen cevap:
 ## 🖼️ `image(prompt, outputPath)`
 
 ```js
-await gpt.image("ışıklı camdan bir ayıcık", "bear.png");
+await gpt.image("ışıklı camdan yapılmış bir ayıcık", "bear.png");
 ```
 
 ---
@@ -81,11 +83,11 @@ await gpt.image("ışıklı camdan bir ayıcık", "bear.png");
 ## 🧩 `imageBase64(prompt)`
 
 ```js
-const base64 = await gpt.imageBase64("gece parlayan kristal kelebek");
+const base64 = await gpt.imageBase64("gece parlayan bir kelebek");
 console.log(base64.slice(0, 100) + "...");
 ```
 
-Kullanım: `<img src="data:image/png;base64,...">`
+Kullanım örneği: `<img src="data:image/png;base64,...">`
 
 ---
 
@@ -116,51 +118,68 @@ await gpt.describe("neon ayıcık");
 
 ---
 
-## ⚙️ Yapılandırma Ayarları
+## ⚙️ Yapılandırma Seçenekleri
 
-| Ayar            | Açıklama                             |
-|------------------|--------------------------------------|
-| `model`         | GPT modeli (`gpt-4`, `gpt-3.5`)       |
-| `language`      | Tarayıcı dili (`en-US`, `tr-TR`)      |
-| `stealth`       | Stealth aktif/pasif                   |
-| `fingerprint`   | navigator taklidi yapılacak mı        |
-| `headless`      | Tarayıcı arayüzsüz çalışsın mı        |
-| `proxy.enabled` | Proxy kullanılsın mı                  |
-| `proxy.server`  | Proxy sunucu adresi                   |
-| `cookiePath`    | Çerezlerin yeri (`sessions/cookies.json`) |
+Aşağıdaki parametreler `createChatGPT({...})` fonksiyonuna gönderilebilir:
+
+| Parametre        | Tür       | Açıklama |
+|------------------|-----------|----------|
+| `model`          | `string`  | Kullanılacak model (`gpt-4`, `gpt-3.5`) |
+| `headless`       | `boolean` | Tarayıcı arayüzsüz mü çalışsın? |
+| `language`       | `string`  | Tarayıcı dili (`tr-TR`, `en-US` vs.) |
+| `stealth`        | `boolean` | Stealth eklentisi aktif/pasif |
+| `fingerprint`    | `boolean` | navigator bilgileri taklit edilsin mi |
+| `proxy.enabled`  | `boolean` | Proxy kullanılacak mı |
+| `proxy.server`   | `string`  | Proxy adresi (örnek: `http://127.0.0.1:8080`) |
+| `cookiePath`     | `string`  | Çerez dosyasının yolu (varsayılan: `sessions/cookies.json`) |
 
 ---
 
 ## 🔐 Giriş ve Oturum Yönetimi
 
-Kütüphane giriş sürecini otomatikleştirir:
+Kütüphane oturum çerezlerini otomatik olarak yönetir.
 
-1. `createChatGPT()` çağrıldığında önce çerez kontrol edilir.
-2. Çerez varsa otomatik giriş yapılır.
-3. Yoksa kullanıcıdan manuel giriş istenir.
-4. Giriş sonrası `sessions/cookies.json` dosyası oluşturulur.
+### 🔓 Giriş Yapmadan (Çerez Yoksa)
 
-> Giriş bir kez yapılır, sonraki her işlem otomatik devam eder.
+- Çerez dosyası yoksa veya geçersizse:
+  - Tarayıcı açılır
+  - Kullanıcıdan ChatGPT’ye giriş yapması beklenir
+  - Girişten sonra çerezler kaydedilir
+  - Sonraki çalıştırmalarda giriş ekranı atlanır
 
-### Özelleştirme
+### 🔐 Giriş Yapıldıysa (Çerez Varsa)
 
-```js
-await createChatGPT({
-  cookiePath: "my-data/login.json"
-});
-```
+- Geçerli çerez varsa:
+  - Giriş yapılmış sayılır
+  - Otomasyon doğrudan başlar
+
+> ✅ Öneri: `npm run login` komutunu bir kez çalıştırarak giriş yap ve çerezi kaydet.
 
 ---
 
-## 🧪 Tam Entegrasyon Örneği
+## 🧪 Tümleşik Örnek Kullanım
 
 ```js
-const gpt = await createChatGPT({ model: "gpt-4", headless: false });
+import { createChatGPT } from "./index.js";
 
-await gpt.chat(["Selam!", "Bugün nasılsın?"]);
-await gpt.image("gecede kitap okuyan baykuş", "owl.png");
+const gpt = await createChatGPT({
+  model: "gpt-4",
+  headless: false,
+  language: "tr-TR",
+  stealth: true,
+  fingerprint: true,
+  proxy: {
+    enabled: false,
+    server: ""
+  },
+  cookiePath: "sessions/cookies.json"
+});
 
-const base64 = await gpt.imageBase64("dumanlar içinde kalan antik şehir");
+await gpt.chat(["Merhaba!", "Bugün nasılsın?"]);
+
+await gpt.image("lambanın ışığında kitap okuyan bir baykuş", "owl.png");
+
+const base64 = await gpt.imageBase64("dumanlar içindeki antik şehir");
 console.log(base64.slice(0, 100));
 
 await gpt.queueImage([
@@ -185,7 +204,7 @@ await gpt.close();
 
 **Eren Seyfi**  
 📫 eren50seyfi@gmail.com  
-🌐 [GitHub](https://github.com/erenseyfi)
+🌐 [GitHub](https://github.com/Eren-Seyfi)
 
 ---
 

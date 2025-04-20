@@ -1,18 +1,34 @@
 import { createChatGPT } from "./index.js";
 import { logInfo, logSuccess, logError } from "./lib/utils/logger.js";
 
+// Ana işlem fonksiyonu
 const run = async () => {
   try {
+    // 🔧 GPT sistemi başlatılıyor
     const gpt = await createChatGPT({
+      // 💡 Kullanılacak model (gpt-4, gpt-3.5 gibi)
       model: "gpt-4",
+
+      // 🖥️ Headless false: Tarayıcı arayüzü açık (gözlemlenebilir)
       headless: false,
+
+      // 🌐 Tarayıcı dili Türkçe (ChatGPT Türkçe arayüz açar)
       language: "tr-TR",
+
+      // 🕵️‍♂️ Stealth modu aktif (bot tespitini engellemek için)
       stealth: true,
+
+      // 🧬 Fake navigator.language, fingerprint taklidi yapılacak mı?
       fingerprint: true,
+
+      // 🌍 Proxy yapılandırması
       proxy: {
-        enabled: false,
-        server: "",
+        enabled: false, // false: proxy kapalı
+        server: "", // proxy adresi (örnek: "http://127.0.0.1:8000")
       },
+
+      // 📁 Oturum çerezi yolu (varsayılan: sessions/cookies.json)
+      // cookiePath: "sessions/cookies.json"
     });
 
     // 🎯 1. Chat özelliği
@@ -40,10 +56,10 @@ const run = async () => {
       {
         prompt: "neon ayıcık",
         output: "neon-bear.png",
-        retry: 3,
-        retryDelay: 2000,
-        backoff: true,
-        describeInstead: true,
+        retry: 3, // Maksimum 3 deneme
+        retryDelay: 2000, // 2 saniye aralık
+        backoff: true, // Gecikme her başarısızlıkta katlanır
+        describeInstead: true, // Başarısız olursa açıklama alınır
       },
       {
         prompt: "uçan pizzacı robot",
@@ -55,6 +71,7 @@ const run = async () => {
       },
     ]);
 
+    // Tarayıcı kapatılır
     await gpt.close();
   } catch (err) {
     logError("🚨 Genel hata: " + err.message);

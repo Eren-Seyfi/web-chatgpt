@@ -1,0 +1,47 @@
+{
+  "name": "web-chatgpt",
+  "version": "1.0.0",
+  "description": "Puppeteer + Stealth ile ChatGPT web arayüzü üzerinden mesaj gönderimi, cevap alma ve görsel üretimi sağlayan modüler otomasyon sistemi.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "login": "node login.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "chatgpt",
+    "puppeteer",
+    "puppeteer-extra",
+    "web automation",
+    "openai",
+    "image generation",
+    "base64",
+    "cli-chatbot",
+    "stealth-browser"
+  ],
+  "author": "Eren Seyfi",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "colors": "^1.4.0",
+    "fs-extra": "^11.3.0",
+    "puppeteer": "^24.6.1",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Eren-Seyfi/web-chatgpt.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Eren-Seyfi/web-chatgpt/issues"
+  },
+  "homepage": "https://github.com/Eren-Seyfi/web-chatgpt#readme"
+}
